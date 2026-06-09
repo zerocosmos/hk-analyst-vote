@@ -1,0 +1,557 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --paper:#FBFAF7;--panel:#FFFFFF;--ink:#1A1D23;--slate:#5A6270;
+    --line:#E5E3DC;--line2:#EFEDE6;
+    --indigo:#283A78;--indigo-soft:#EAEDF7;
+    --green:#1F7A5C;--green-soft:#E7F2ED;
+    --clay:#B5562F;--clay-soft:#FBEDE6;--amber:#9A6B1F;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:980px;margin:0 auto;padding:0 18px 120px}
+  .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--slate);font-weight:600}
+  header.top{position:sticky;top:0;z-index:40;background:rgba(251,250,247,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .top-inner{max-width:980px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;flex-direction:column;line-height:1.15}
+  .brand b{font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .brand span{font-size:11px;color:var(--slate)}
+  .modes{margin-left:auto;display:flex;background:var(--line2);border-radius:999px;padding:3px}
+  .modes button{border:0;background:transparent;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--slate);padding:6px 14px;border-radius:999px;cursor:pointer}
+  .modes button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .hero{padding:30px 0 14px}
+  .hero h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:6px 0 8px}
+  .hero p{margin:0;color:var(--slate);font-size:14px;max-width:700px}
+  .rule{font-size:13px;color:var(--ink);background:var(--indigo-soft);border:1px solid #D7DDF0;border-radius:12px;padding:13px 15px;margin-top:16px}
+  .rule b{color:var(--indigo)}.rule ul{margin:8px 0 0;padding-left:18px}.rule li{margin:3px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .field label{font-size:12px;font-weight:600;color:var(--slate)}
+  .field input{font-family:var(--sans);font-size:15px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+  .field input:focus{outline:2px solid var(--indigo);border-color:var(--indigo)}
+  .row{display:flex;gap:12px;flex-wrap:wrap}.row .field{flex:1;min-width:160px}
+  .btn{font-family:var(--sans);font-weight:700;font-size:14px;border:0;border-radius:10px;padding:11px 18px;cursor:pointer}
+  .btn.primary{background:var(--indigo);color:#fff}.btn.primary:disabled{opacity:.4;cursor:not-allowed}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .hint{font-size:12px;color:var(--slate);margin-top:4px}
+  .board{margin-top:22px}
+  .board-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+  .board-head .count{font-family:var(--mono);font-size:13px;color:var(--slate)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+  .cell{border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:7px 4px;min-height:48px;text-align:center;color:var(--ink);transition:transform .08s}
+  .cell:hover{transform:translateY(-1px);border-color:var(--indigo)}
+  .cell .cn{font-family:var(--mono);font-size:13px;font-weight:700;line-height:1;color:inherit}
+  .cell .csn{font-size:9px;line-height:1.12;color:var(--slate);max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+  .cell.partial{background:#FFF8E9;border-color:#E7CE93;color:var(--amber)}
+  .cell.full{background:var(--green-soft);border-color:#AED8C6;color:var(--green)}
+  .cell.active{outline:2px solid var(--indigo);outline-offset:1px}
+  .sector{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;scroll-margin-top:80px}
+  .sector-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .sector-no{font-family:var(--mono);font-size:13px;color:var(--indigo);font-weight:700}
+  .sector h2{font-size:19px;font-weight:800;letter-spacing:-.01em;margin:0}
+  .budget{margin:14px 0 4px}
+  .budget .lab{display:flex;justify-content:space-between;font-size:12.5px;color:var(--slate);margin-bottom:5px}
+  .budget .lab b{font-family:var(--mono);color:var(--ink)}
+  .budget .track{height:8px;background:var(--line2);border-radius:4px;overflow:hidden}
+  .budget .fill{height:100%;background:var(--indigo);width:0;transition:width .15s}
+  .budget.over .fill{background:var(--clay)}
+  .toolbar{display:flex;gap:8px;margin:12px 0 6px;flex-wrap:wrap}
+  .search{flex:1;min-width:180px;font-family:var(--sans);font-size:14px;padding:9px 12px;border:1px solid var(--line);border-radius:9px}
+  .search:focus{outline:2px solid var(--indigo);border-color:var(--indigo)}
+  .cands{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:7px}
+  .cand{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+  .cand.has{border-color:var(--indigo);background:var(--indigo-soft)}
+  .cand .who{display:flex;flex-direction:column;line-height:1.25;min-width:0;flex:1}
+  .cand .who b{font-size:14px;font-weight:700}.cand .who small{font-size:11.5px;color:var(--slate)}
+  .stepper{display:flex;align-items:center;gap:0;flex:none;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .stepper button{width:30px;height:30px;border:0;background:#fff;font-size:17px;line-height:1;cursor:pointer;color:var(--ink);font-family:var(--sans)}
+  .stepper button:disabled{opacity:.3;cursor:not-allowed}
+  .stepper button:hover:not(:disabled){background:var(--indigo-soft)}
+  .stepper .v{width:30px;text-align:center;font-family:var(--mono);font-weight:700;font-size:14px;color:var(--indigo)}
+  .stepper .v.zero{color:var(--slate)}
+  .writein{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+  .writein .eyebrow{margin-bottom:7px;display:block}
+  .nav-btns{display:flex;justify-content:space-between;margin-top:16px}
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:45;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+  .dock-inner{max-width:980px;margin:0 auto;padding:11px 18px;display:flex;align-items:center;gap:14px}
+  .dock .meter{font-family:var(--mono);font-size:13px;color:var(--slate)}.dock .meter b{color:var(--ink)}
+  .dock .actions{margin-left:auto;display:flex;gap:8px}
+  .stat-row{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;flex:1;min-width:140px}
+  .stat .n{font-family:var(--mono);font-size:26px;font-weight:700}.stat .l{font-size:12px;color:var(--slate);margin-top:2px}
+  .agg-sector{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .agg-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.agg-head h3{margin:0;font-size:16px;font-weight:800}
+  .flag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}
+  .flag.ok{background:var(--green-soft);color:var(--green)}.flag.review{background:#FFF8E9;color:var(--amber)}.flag.coord{background:var(--clay-soft);color:var(--clay)}
+  .tally{margin-top:12px;border-collapse:collapse;width:100%;font-size:13.5px}
+  .tally th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);font-weight:600;padding:0 8px 6px;border-bottom:1px solid var(--line)}
+  .tally td{padding:7px 8px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  .tally .nm{font-weight:600}.tally .fm{color:var(--slate);font-size:12px}
+  .bar{height:8px;border-radius:4px;background:var(--indigo);min-width:3px}.barwrap{display:flex;align-items:center;gap:8px}
+  .votes{font-family:var(--mono);font-weight:700;width:40px;text-align:right}
+  .pts{font-family:var(--mono);color:var(--indigo);font-weight:700}
+  .ballotstrip{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .ballot{border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:120px;background:#FCFBF8}
+  .ballot .bl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);font-weight:700}
+  .ballot .p{font-size:13px;font-weight:600;margin-top:3px}.ballot .p small{color:var(--slate);font-weight:400}
+  .muted{color:var(--slate);font-size:13px}.empty{text-align:center;color:var(--slate);padding:48px 0}
+  .toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13.5px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+  details.legend{margin-top:8px;font-size:12.5px;color:var(--slate)}details.legend summary{cursor:pointer;color:var(--indigo);font-weight:600}
+  .banner{border-radius:12px;padding:11px 14px;font-size:13px;margin:0 0 14px;border:1px solid}
+  .banner.auto{background:var(--green-soft);border-color:#AED8C6;color:var(--green)}
+  .banner.manual{background:#FFF8E9;border-color:#E7CE93;color:var(--amber)}
+  .resp-row{border:1px solid var(--line);border-radius:10px;margin-bottom:7px;overflow:hidden}
+  .resp-btn{display:flex;align-items:center;gap:10px;width:100%;border:0;background:#fff;padding:11px 13px;cursor:pointer;font-family:var(--sans);text-align:left}
+  .resp-btn:hover{background:var(--indigo-soft)}
+  .resp-btn .nm{font-weight:700;font-size:14px}
+  .resp-btn .dept{font-size:12px;color:var(--slate)}
+  .resp-btn .meta{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--slate);text-align:right;flex:none}
+  .resp-btn .chev{flex:none;color:var(--slate);transition:transform .15s}
+  .resp-row.open .chev{transform:rotate(90deg)}
+  .resp-detail{display:none;padding:4px 13px 13px;background:#FCFBF8;border-top:1px solid var(--line2)}
+  .resp-row.open .resp-detail{display:block}
+  .rd-sector{padding:7px 0;border-bottom:1px solid var(--line2)}
+  .rd-sector:last-child{border-bottom:0}
+  .rd-sector .sname{font-weight:600;font-size:13px}
+  .rd-picks{font-size:12.5px;color:var(--slate);margin-top:2px}
+  .rd-picks b{color:var(--indigo);font-family:var(--mono)}
+  .coord-item{border:1px solid #EAD9CF;border-radius:10px;padding:11px 13px;margin-top:9px;background:#FDF7F3}
+  .coord-item.exact{border-color:#C7D0EC;background:#F4F6FC}
+  .coord-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .coord-head .sno{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--indigo)}
+  .coord-head .snm{font-weight:700;font-size:14px}
+  .coord-head .sum{margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700}
+  .people{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .person-chip{font-size:12px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+  .person-chip b{font-family:var(--mono);color:var(--indigo)}
+  @media(max-width:560px){.hero h1{font-size:22px}.cands{grid-template-columns:1fr}.grid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))}.modes button{padding:6px 10px}}
+</style>
+
+<header class="top"><div class="top-inner">
+  <div class="brand"><b>베스트 애널리스트 사내 투표</b><span>2026 상반기 · 한경비즈니스 펀드매니저 조사 대응</span></div>
+  <div class="modes">
+    <button id="m-vote" class="on" onclick="setMode('vote')">응답</button>
+    <button id="m-admin" onclick="setMode('admin')">집계</button>
+  </div>
+</div></header>
+
+<div class="wrap">
+  <section id="view-vote">
+    <div class="hero">
+      <span class="eyebrow">Internal 6-ballot allocation</span>
+      <h1>각 부문에 6부의 표를 직접 배분해 주세요</h1>
+      <p>부문마다 회사가 가진 <b>6부의 표(부문당 12점 = 6부 × 2명)</b>를 원하는 애널리스트들에게 나눠 주세요.
+      한 애널리스트에게 <b>최대 6점</b>까지 줄 수 있습니다.</p>
+      <div class="rule">
+        <b>점수의 의미</b>
+        <ul>
+          <li>의견이 있는 부문에만 투표해주세요.</li>
+          <li>부문 합계는 최대 <b>12점</b>(=6부 × 2명).</li>
+          <li>예: A에 6점·B에 6점, 또는 A 4점 · B 3점 · C 3점 · D 2점 처럼 분산도 가능.</li>
+          <li>12점을 반드시 채우지 않아도 됩니다. (예: 특정 부문에서 A 애널리스트에게 2점만 줘도 됩니다)</li>
+          <li>투표가 끝난 뒤 합산 점수가 12점을 초과하는 부문이 있으면, 그 부문에 투표한 사람들끼리 조율해 총 12점으로 맞춥니다.</li>
+        </ul>
+      </div>
+      <div class="rule" style="background:var(--green-soft);border-color:#AED8C6;margin-top:10px">
+        <b style="color:var(--green)">이미 제출한 응답을 수정하려면</b>
+        <ul>
+          <li>1) 아래 <b>[저장한 내 응답 파일 불러오기]</b>로, 제출할 때 받은 <b>투표_이름.json</b> 파일을 엽니다.</li>
+          <li>2) 이전에 넣은 점수가 그대로 복원되면, 고치고 싶은 부문의 점수를 바꿉니다.</li>
+          <li>3) 다시 <b>[응답 저장 (파일 받기)]</b> → 새 파일을 취합 담당자에게 보내면 이전 것이 교체됩니다.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" id="idcard">
+      <div class="row">
+        <div class="field"><label for="nm">이름 *</label>
+          <input id="nm" placeholder="예: 홍길동" autocomplete="off" oninput="saveDraft()">
+          <div class="hint">제출·수정 시 본인 확인용. 같은 이름으로 다시 들어오면 이어서 수정됩니다.</div></div>
+        <div class="field"><label for="dept">팀 / 부서 (선택)</label>
+          <input id="dept" placeholder="예: 주식운용1팀" autocomplete="off" oninput="saveDraft()"></div>
+      </div>
+      <input id="importmine" type="file" accept="application/json,.json" style="display:none" onchange="importMine(this.files)">
+      <button class="btn ghost" onclick="document.getElementById('importmine').click()">저장한 내 응답 파일 불러오기</button>
+      <div class="hint" style="margin-top:8px">처음이면 그냥 작성하세요. 전에 제출한 적이 있으면, 그때 받은 <b>투표_이름.json</b> 파일을 불러와 이어서 수정할 수 있어요.</div>
+    </div>
+    <div id="submitresult"></div>
+    <div class="board">
+      <div class="board-head"><span class="eyebrow">부문 진행 현황</span><span class="count" id="boardcount"></span></div>
+      <div class="grid" id="boardgrid"></div>
+    </div>
+    <div id="sectorhost"></div>
+    <div class="nav-btns">
+      <button class="btn ghost" id="prevbtn" onclick="step(-1)">← 이전 부문</button>
+      <button class="btn ghost" id="nextbtn" onclick="step(1)">다음 부문 →</button>
+    </div>
+  </section>
+
+  <section id="view-admin" style="display:none">
+    <div class="hero">
+      <span class="eyebrow">Submit & collect</span>
+      <h1>답변 제출/취합</h1>
+      <p>직원 응답을 부문별로 합산해, 합계가 <b>12점</b>이 된(또는 넘은) 부문과 그 부문에 표를 준
+      <b>조율 대상자</b>를 한눈에 보여줍니다. 아래 <b>최종 6부 예시</b>는 합산 점수 비율대로 12점(1인 최대 6점)으로 재배분한 결과입니다.</p>
+    </div>
+
+    <div id="modebanner"></div>
+
+    <div class="card" style="margin-top:0">
+      <span class="eyebrow">답변 제출하기 — 파일/코드로 응답 추가</span>
+      <div class="row" style="margin-top:10px;align-items:flex-end">
+        <input id="importfiles" type="file" accept="application/json,.json" multiple style="display:none" onchange="importFiles(this.files)">
+        <button class="btn primary" onclick="document.getElementById('importfiles').click()">응답 파일 불러오기 (여러 개)</button>
+        <button class="btn ghost" onclick="refreshAdmin()">새로고침</button>
+      </div>
+      <div class="field" style="margin-top:14px;margin-bottom:0">
+        <label>응답 코드 붙여넣기 — 여러 명(예: 30명)을 한 줄에 하나씩, 또는 공백으로 구분해 한꺼번에</label>
+        <textarea id="codebox" rows="7" placeholder="직원들이 보낸 코드를 여기에 모두 붙여넣으세요 (한 줄에 하나씩)" style="font-family:var(--mono);font-size:11.5px;padding:10px;border:1px solid var(--line);border-radius:9px;resize:vertical"></textarea>
+        <button class="btn primary" style="margin-top:8px;align-self:flex-start" onclick="importCodes()">코드 일괄 불러오기</button>
+      </div>
+    </div>
+
+    <div class="stat-row" id="stats"></div>
+    <p class="muted" style="margin:-4px 0 6px;font-size:12px;line-height:1.7">
+      🟢 <b>여유</b> — 합산 12점 미만. &nbsp; 🟦 <b>마감(12)</b> — 정확히 12점. &nbsp; 🔴 <b>초과/조율</b> — 12점 초과 또는 2위권 동률 등으로 사람이 직접 정해야 함.</p>
+
+    <div class="card">
+      <span class="eyebrow">응답자별 내역 — 이름을 누르면 부문별 점수가 펼쳐집니다</span>
+      <div id="resphost" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card" id="coordcard" style="display:none">
+      <span class="eyebrow" style="color:var(--clay)">조율 보드 — 12점 도달·초과 부문과 모일 사람</span>
+      <div id="coordhost"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+      <button class="btn ghost" onclick="exportResponses()">응답 CSV 내보내기</button>
+      <button class="btn ghost" onclick="exportTally()">집계 CSV 내보내기</button>
+    </div>
+    <span class="eyebrow" style="display:block;margin:2px 0 6px">부문 상세</span>
+    <div id="agghost"></div>
+
+    <div class="card">
+      <div class="row" style="align-items:flex-end">
+        <div class="field" style="flex:0 0 160px;margin-bottom:0">
+          <label>예상 응답 인원</label>
+          <input id="headcount" type="number" min="1" value="30" oninput="renderAdmin()">
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="budget" style="margin:0"><div class="lab"><span>제출 진행률</span><span><b id="prog">0 / 30</b></span></div>
+            <div class="track"><div class="fill" id="progfill"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="dock" id="dock"><div class="dock-inner">
+  <div class="meter">채운 부문 <b id="dockdone">0</b> / 31 · 배분 점수 합 <b id="dockpts">0</b>점</div>
+  <div class="actions"><button class="btn primary" id="submitbtn" onclick="submitVote()">응답 제출 (코드 받기)</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SECTORS = [{"name": "반도체 분야", "analysts": [{"firm": "교보증권", "name": "최보영"}, {"firm": "다올투자증권", "name": "고영민"}, {"firm": "대신증권", "name": "류형근"}, {"firm": "메리츠증권", "name": "김선우"}, {"firm": "미래에셋증권", "name": "김영건"}, {"firm": "삼성증권", "name": "이종욱"}, {"firm": "상상인증권", "name": "정민규"}, {"firm": "신한투자증권", "name": "김형태"}, {"firm": "유안타증권", "name": "백길현"}, {"firm": "유진투자증권", "name": "손인준"}, {"firm": "키움증권", "name": "박유악"}, {"firm": "하나증권", "name": "김록호"}, {"firm": "한국투자증권", "name": "채민숙"}, {"firm": "한화투자증권", "name": "박준영"}, {"firm": "현대차증권", "name": "노근창"}, {"firm": "BNK투자증권", "name": "이민희"}, {"firm": "DB증권", "name": "서승연"}, {"firm": "DS투자증권", "name": "이수림"}, {"firm": "IBK투자증권", "name": "김운호"}, {"firm": "iM증권", "name": "송명섭"}, {"firm": "KB증권", "name": "이창민"}, {"firm": "LS증권", "name": "정우성"}, {"firm": "NH투자증권", "name": "류영호"}, {"firm": "SK증권", "name": "한동희"}], "num": 1}, {"name": "2차전지 분야", "analysts": [{"firm": "교보증권", "name": "최보영"}, {"firm": "다올투자증권", "name": "유지웅"}, {"firm": "대신증권", "name": "김귀연"}, {"firm": "메리츠증권", "name": "노우호"}, {"firm": "미래에셋증권", "name": "김철중"}, {"firm": "삼성증권", "name": "장정훈"}, {"firm": "상상인증권", "name": "유민기"}, {"firm": "신영증권", "name": "박진수"}, {"firm": "신한투자증권", "name": "이진명"}, {"firm": "유안타증권", "name": "이안나"}, {"firm": "유진투자증권", "name": "황성현"}, {"firm": "키움증권", "name": "권준수"}, {"firm": "하나증권", "name": "김현수"}, {"firm": "한화투자증권", "name": "이용욱"}, {"firm": "DB증권", "name": "안회수"}, {"firm": "DS투자증권", "name": "최태용"}, {"firm": "IBK투자증권", "name": "이현욱"}, {"firm": "iM증권", "name": "정원석"}, {"firm": "KB증권", "name": "이창민"}, {"firm": "LS증권", "name": "정경희"}, {"firm": "NH투자증권", "name": "주민우"}, {"firm": "SK증권", "name": "박형우"}], "num": 2}, {"name": "통신 분야", "analysts": [{"firm": "대신증권", "name": "김회재"}, {"firm": "메리츠증권", "name": "정지수"}, {"firm": "미래에셋증권", "name": "최유진"}, {"firm": "삼성증권", "name": "최민하"}, {"firm": "신영증권", "name": "정원석"}, {"firm": "신한투자증권", "name": "김아람"}, {"firm": "유안타증권", "name": "이승웅"}, {"firm": "유진투자증권", "name": "이찬영"}, {"firm": "키움증권", "name": "김학준"}, {"firm": "하나증권", "name": "김홍식"}, {"firm": "한국투자증권", "name": "김정찬"}, {"firm": "흥국증권", "name": "황성진"}, {"firm": "BNK투자증권", "name": "김장원"}, {"firm": "DB증권", "name": "신은정"}, {"firm": "IBK투자증권", "name": "김태현"}, {"firm": "KB증권", "name": "김준섭"}, {"firm": "NH투자증권", "name": "안재민"}], "num": 3}, {"name": "전기전자·스마트폰 분야", "analysts": [{"firm": "다올투자증권", "name": "김연미"}, {"firm": "대신증권", "name": "박강호"}, {"firm": "메리츠증권", "name": "양승수"}, {"firm": "미래에셋증권", "name": "박준서"}, {"firm": "삼성증권", "name": "이종욱"}, {"firm": "상상인증권", "name": "정민규"}, {"firm": "신한투자증권", "name": "오강호"}, {"firm": "유안타증권", "name": "고선영"}, {"firm": "유진투자증권", "name": "이주형"}, {"firm": "키움증권", "name": "권민규"}, {"firm": "하나증권", "name": "김민경"}, {"firm": "현대차증권", "name": "김종배"}, {"firm": "BNK투자증권", "name": "이민희"}, {"firm": "DB증권", "name": "조현지"}, {"firm": "DS투자증권", "name": "조대형"}, {"firm": "iM증권", "name": "고의영"}, {"firm": "KB증권", "name": "이창민"}, {"firm": "NH투자증권", "name": "황지현"}, {"firm": "SK증권", "name": "박형우"}], "num": 4}, {"name": "인터넷·소프트웨어 분야", "analysts": [{"firm": "교보증권", "name": "김동우"}, {"firm": "다올투자증권", "name": "김혜영"}, {"firm": "메리츠증권", "name": "이효진"}, {"firm": "미래에셋증권", "name": "임희석"}, {"firm": "삼성증권", "name": "오동환"}, {"firm": "신한투자증권", "name": "강석오"}, {"firm": "유안타증권", "name": "이창영"}, {"firm": "유진투자증권", "name": "정의훈"}, {"firm": "키움증권", "name": "김진구"}, {"firm": "하나증권", "name": "이준호"}, {"firm": "한국투자증권", "name": "정호윤"}, {"firm": "한화투자증권", "name": "김소혜"}, {"firm": "BNK투자증권", "name": "이종원"}, {"firm": "DB증권", "name": "신은정"}, {"firm": "DS투자증권", "name": "최승호"}, {"firm": "IBK투자증권", "name": "이승훈"}, {"firm": "KB증권", "name": "이지은"}, {"firm": "LS증권", "name": "선유진"}, {"firm": "NH투자증권", "name": "안재민"}, {"firm": "SK증권", "name": "남효지"}], "num": 5}, {"name": "엔터·레저·미디어 분야", "analysts": [{"firm": "교보증권", "name": "장민지"}, {"firm": "다올투자증권", "name": "임도영"}, {"firm": "대신증권", "name": "김회재"}, {"firm": "메리츠증권", "name": "김민영"}, {"firm": "삼성증권", "name": "최민하"}, {"firm": "신영증권", "name": "김지현"}, {"firm": "신한투자증권", "name": "지인해"}, {"firm": "유안타증권", "name": "이환욱"}, {"firm": "유진투자증권", "name": "이현지"}, {"firm": "키움증권", "name": "임수진"}, {"firm": "하나증권", "name": "이기훈"}, {"firm": "한국투자증권", "name": "정호윤"}, {"firm": "흥국증권", "name": "송지원"}, {"firm": "BNK투자증권", "name": "이종원"}, {"firm": "DB증권", "name": "신은정"}, {"firm": "DS투자증권", "name": "장지혜"}, {"firm": "IBK투자증권", "name": "김유혁"}, {"firm": "iM증권", "name": "황지원"}, {"firm": "KB증권", "name": "최용현"}, {"firm": "LS증권", "name": "박성호"}, {"firm": "NH투자증권", "name": "이화정"}, {"firm": "SK증권", "name": "박준형"}], "num": 6}, {"name": "유통 분야", "analysts": [{"firm": "교보증권", "name": "장민지"}, {"firm": "대신증권", "name": "유정현"}, {"firm": "메리츠증권", "name": "김정욱"}, {"firm": "미래에셋증권", "name": "배송이"}, {"firm": "삼성증권", "name": "백재승"}, {"firm": "신영증권", "name": "서정연"}, {"firm": "신한투자증권", "name": "조상훈"}, {"firm": "유안타증권", "name": "이승은"}, {"firm": "유진투자증권", "name": "이해니"}, {"firm": "키움증권", "name": "박상준"}, {"firm": "한국투자증권", "name": "김명주"}, {"firm": "한화투자증권", "name": "이진협"}, {"firm": "흥국증권", "name": "박종렬"}, {"firm": "DB증권", "name": "허제나"}, {"firm": "IBK투자증권", "name": "남성현"}, {"firm": "LS증권", "name": "오린아"}, {"firm": "NH투자증권", "name": "주영훈"}], "num": 7}, {"name": "운송 분야", "analysts": [{"firm": "다올투자증권", "name": "오정하"}, {"firm": "미래에셋증권", "name": "류제현"}, {"firm": "삼성증권", "name": "김영호"}, {"firm": "상상인증권", "name": "이서연"}, {"firm": "신한투자증권", "name": "최민기"}, {"firm": "유안타증권", "name": "최지운"}, {"firm": "유진투자증권", "name": "양승윤"}, {"firm": "하나증권", "name": "안도현"}, {"firm": "한국투자증권", "name": "최고운"}, {"firm": "iM증권", "name": "배세호"}, {"firm": "KB증권", "name": "강성진"}, {"firm": "LS증권", "name": "이재혁"}, {"firm": "NH투자증권", "name": "정연승"}], "num": 8}, {"name": "증권·보험·기타 금융 분야", "analysts": [{"firm": "교보증권", "name": "김지영"}, {"firm": "다올투자증권", "name": "김지원"}, {"firm": "대신증권", "name": "박혜진"}, {"firm": "메리츠증권", "name": "조아해"}, {"firm": "미래에셋증권", "name": "정태준"}, {"firm": "삼성증권", "name": "정민기"}, {"firm": "상상인증권", "name": "김현수"}, {"firm": "신한투자증권", "name": "임희연"}, {"firm": "유안타증권", "name": "우도형"}, {"firm": "키움증권", "name": "안영준"}, {"firm": "하나증권", "name": "고연수"}, {"firm": "한국투자증권", "name": "백두산"}, {"firm": "한화투자증권", "name": "김도하"}, {"firm": "BNK투자증권", "name": "김인"}, {"firm": "DB증권", "name": "나민욱"}, {"firm": "iM증권", "name": "설용진"}, {"firm": "KB증권", "name": "강승건"}, {"firm": "LS증권", "name": "전배승"}, {"firm": "NH투자증권", "name": "윤유동"}, {"firm": "SK증권", "name": "장영임"}], "num": 9}, {"name": "은행·신용카드 분야", "analysts": [{"firm": "교보증권", "name": "김지영"}, {"firm": "다올투자증권", "name": "김지원"}, {"firm": "대신증권", "name": "박혜진"}, {"firm": "메리츠증권", "name": "조아해"}, {"firm": "미래에셋증권", "name": "정태준"}, {"firm": "삼성증권", "name": "김재우"}, {"firm": "상상인증권", "name": "김현수"}, {"firm": "신한투자증권", "name": "은경완"}, {"firm": "유안타증권", "name": "우도형"}, {"firm": "키움증권", "name": "김은갑"}, {"firm": "하나증권", "name": "최정욱"}, {"firm": "한국투자증권", "name": "백두산"}, {"firm": "한화투자증권", "name": "김도하"}, {"firm": "흥국증권", "name": "유준석"}, {"firm": "BNK투자증권", "name": "김인"}, {"firm": "DB증권", "name": "나민욱"}, {"firm": "iM증권", "name": "설용진"}, {"firm": "KB증권", "name": "강승건"}, {"firm": "LS증권", "name": "전배승"}, {"firm": "NH투자증권", "name": "정준섭"}], "num": 10}, {"name": "유틸리티 분야", "analysts": [{"firm": "교보증권", "name": "이상호"}, {"firm": "대신증권", "name": "허민호"}, {"firm": "메리츠증권", "name": "문경원"}, {"firm": "미래에셋증권", "name": "류제현"}, {"firm": "삼성증권", "name": "김영호"}, {"firm": "신한투자증권", "name": "한승훈"}, {"firm": "유안타증권", "name": "손현정"}, {"firm": "유진투자증권", "name": "황성현"}, {"firm": "키움증권", "name": "조재원"}, {"firm": "하나증권", "name": "유재선"}, {"firm": "한국투자증권", "name": "장남현"}, {"firm": "한화투자증권", "name": "송유림"}, {"firm": "DS투자증권", "name": "안주원"}, {"firm": "IBK투자증권", "name": "김태현"}, {"firm": "iM증권", "name": "전유진"}, {"firm": "KB증권", "name": "정혜정"}, {"firm": "LS증권", "name": "성종화"}, {"firm": "NH투자증권", "name": "이민재"}, {"firm": "SK증권", "name": "나민식"}], "num": 11}, {"name": "자동차·타이어 분야", "analysts": [{"firm": "교보증권", "name": "김광식"}, {"firm": "다올투자증권", "name": "유지웅"}, {"firm": "대신증권", "name": "김귀연"}, {"firm": "메리츠증권", "name": "김준성"}, {"firm": "미래에셋증권", "name": "김진석"}, {"firm": "삼성증권", "name": "임은영"}, {"firm": "상상인증권", "name": "유민기"}, {"firm": "신영증권", "name": "문용권"}, {"firm": "신한투자증권", "name": "박광래"}, {"firm": "유안타증권", "name": "김용민"}, {"firm": "유진투자증권", "name": "이재일"}, {"firm": "키움증권", "name": "신윤철"}, {"firm": "하나증권", "name": "송선재"}, {"firm": "한국투자증권", "name": "김창호"}, {"firm": "한화투자증권", "name": "김성래"}, {"firm": "현대차증권", "name": "장문수"}, {"firm": "흥국증권", "name": "마건우"}, {"firm": "BNK투자증권", "name": "이상현"}, {"firm": "DB증권", "name": "남주신"}, {"firm": "DS투자증권", "name": "최태용"}, {"firm": "IBK투자증권", "name": "이현욱"}, {"firm": "iM증권", "name": "이상수"}, {"firm": "KB증권", "name": "강성진"}, {"firm": "LS증권", "name": "이병근"}, {"firm": "NH투자증권", "name": "하늘"}], "num": 12}, {"name": "조선·중공업 분야", "analysts": [{"firm": "다올투자증권", "name": "최광식"}, {"firm": "대신증권", "name": "이지니"}, {"firm": "메리츠증권", "name": "배기연"}, {"firm": "삼성증권", "name": "한영수"}, {"firm": "상상인증권", "name": "이서연"}, {"firm": "신한투자증권", "name": "이동헌"}, {"firm": "유안타증권", "name": "김용민"}, {"firm": "유진투자증권", "name": "양승윤"}, {"firm": "키움증권", "name": "이한결"}, {"firm": "하나증권", "name": "유재선"}, {"firm": "한국투자증권", "name": "강경태"}, {"firm": "한화투자증권", "name": "배성조"}, {"firm": "현대차증권", "name": "백주호"}, {"firm": "DB증권", "name": "서재호"}, {"firm": "DS투자증권", "name": "김대성"}, {"firm": "IBK투자증권", "name": "오지훈"}, {"firm": "iM증권", "name": "변용진"}, {"firm": "KB증권", "name": "정동익"}, {"firm": "LS증권", "name": "이재혁"}, {"firm": "NH투자증권", "name": "정연승"}, {"firm": "SK증권", "name": "한승한"}], "num": 13}, {"name": "방산·우주·기계 분야", "analysts": [{"firm": "교보증권", "name": "김광식"}, {"firm": "다올투자증권", "name": "최광식"}, {"firm": "대신증권", "name": "최정환"}, {"firm": "메리츠증권", "name": "이지호"}, {"firm": "삼성증권", "name": "한영수"}, {"firm": "신한투자증권", "name": "이동헌"}, {"firm": "유안타증권", "name": "백종민"}, {"firm": "유진투자증권", "name": "양승윤"}, {"firm": "키움증권", "name": "이한결"}, {"firm": "하나증권", "name": "채운샘"}, {"firm": "한국투자증권", "name": "장남현"}, {"firm": "한화투자증권", "name": "배성조"}, {"firm": "BNK투자증권", "name": "이상현"}, {"firm": "DB증권", "name": "서재호"}, {"firm": "DS투자증권", "name": "강태호"}, {"firm": "iM증권", "name": "변용진"}, {"firm": "KB증권", "name": "정동익"}, {"firm": "LS증권", "name": "이재광"}, {"firm": "SK증권", "name": "한승한"}], "num": 14}, {"name": "제약·바이오·의료기기 분야", "analysts": [{"firm": "교보증권", "name": "정희령"}, {"firm": "다올투자증권", "name": "이지수"}, {"firm": "대신증권", "name": "홍가혜"}, {"firm": "메리츠증권", "name": "김준영"}, {"firm": "미래에셋증권", "name": "김승민"}, {"firm": "삼성증권", "name": "서근희"}, {"firm": "상상인증권", "name": "이달미"}, {"firm": "신영증권", "name": "정유경"}, {"firm": "신한투자증권", "name": "엄민용"}, {"firm": "유안타증권", "name": "하현수"}, {"firm": "유진투자증권", "name": "권해순"}, {"firm": "키움증권", "name": "허혜민"}, {"firm": "하나증권", "name": "김선아"}, {"firm": "한국투자증권", "name": "위해주"}, {"firm": "한양증권", "name": "오병용"}, {"firm": "현대차증권", "name": "김현석"}, {"firm": "흥국증권", "name": "이지원"}, {"firm": "DB증권", "name": "이명선"}, {"firm": "DS투자증권", "name": "김민정"}, {"firm": "IBK투자증권", "name": "정이수"}, {"firm": "iM증권", "name": "정재원"}, {"firm": "KB증권", "name": "신지훈"}, {"firm": "LS증권", "name": "조은애"}, {"firm": "NH투자증권", "name": "한승연"}, {"firm": "SK증권", "name": "이선경"}], "num": 15}, {"name": "정유·화학 분야", "analysts": [{"firm": "메리츠증권", "name": "노우호"}, {"firm": "미래에셋증권", "name": "이진호"}, {"firm": "삼성증권", "name": "조현렬"}, {"firm": "상상인증권", "name": "백영찬"}, {"firm": "신영증권", "name": "신홍주"}, {"firm": "신한투자증권", "name": "이진명"}, {"firm": "유안타증권", "name": "황규원"}, {"firm": "유진투자증권", "name": "황성현"}, {"firm": "하나증권", "name": "윤재성"}, {"firm": "한국투자증권", "name": "이충재"}, {"firm": "한화투자증권", "name": "이용욱"}, {"firm": "BNK투자증권", "name": "김현태"}, {"firm": "DB증권", "name": "한승재"}, {"firm": "IBK투자증권", "name": "이동욱"}, {"firm": "iM증권", "name": "전유진"}, {"firm": "KB증권", "name": "전우제"}, {"firm": "LS증권", "name": "정경희"}, {"firm": "NH투자증권", "name": "최영광"}], "num": 16}, {"name": "음식료·담배 분야", "analysts": [{"firm": "교보증권", "name": "권우정"}, {"firm": "다올투자증권", "name": "이다연"}, {"firm": "메리츠증권", "name": "김정욱"}, {"firm": "신한투자증권", "name": "조상훈"}, {"firm": "유안타증권", "name": "손현정"}, {"firm": "키움증권", "name": "박상준"}, {"firm": "하나증권", "name": "심은주"}, {"firm": "한국투자증권", "name": "최고운"}, {"firm": "한화투자증권", "name": "한유정"}, {"firm": "현대차증권", "name": "하희지"}, {"firm": "DS투자증권", "name": "장지혜"}, {"firm": "IBK투자증권", "name": "김태현"}, {"firm": "KB증권", "name": "류은애"}, {"firm": "LS증권", "name": "박성호"}, {"firm": "NH투자증권", "name": "주영훈"}], "num": 17}, {"name": "생활소비재(화장품/의류 등)·교육 분야", "analysts": [{"firm": "교보증권", "name": "권우정"}, {"firm": "다올투자증권", "name": "박종현"}, {"firm": "대신증권", "name": "유정현"}, {"firm": "미래에셋증권", "name": "배송이"}, {"firm": "삼성증권", "name": "이혜인"}, {"firm": "신영증권", "name": "이교석"}, {"firm": "신한투자증권", "name": "박현진"}, {"firm": "유안타증권", "name": "이승은"}, {"firm": "유진투자증권", "name": "이해니"}, {"firm": "한국투자증권", "name": "김명주"}, {"firm": "한양증권", "name": "오병용"}, {"firm": "한화투자증권", "name": "한유정"}, {"firm": "현대차증권", "name": "하희지"}, {"firm": "흥국증권", "name": "이지원"}, {"firm": "BNK투자증권", "name": "김지은"}, {"firm": "DB증권", "name": "허제나"}, {"firm": "KB증권", "name": "손민영"}, {"firm": "LS증권", "name": "오린아"}, {"firm": "NH투자증권", "name": "정지윤"}, {"firm": "SK증권", "name": "형권훈"}], "num": 18}, {"name": "철강·금속 분야", "analysts": [{"firm": "다올투자증권", "name": "이정우"}, {"firm": "메리츠증권", "name": "장재혁"}, {"firm": "미래에셋증권", "name": "김기룡"}, {"firm": "삼성증권", "name": "백재승"}, {"firm": "상상인증권", "name": "김진범"}, {"firm": "신한투자증권", "name": "박광래"}, {"firm": "유진투자증권", "name": "김소정"}, {"firm": "키움증권", "name": "이종형"}, {"firm": "하나증권", "name": "박성봉"}, {"firm": "한국투자증권", "name": "최문선"}, {"firm": "한화투자증권", "name": "권지우"}, {"firm": "현대차증권", "name": "박현욱"}, {"firm": "BNK투자증권", "name": "김현태"}, {"firm": "DB증권", "name": "안회수"}, {"firm": "iM증권", "name": "김윤상"}, {"firm": "KB증권", "name": "최용현"}], "num": 19}, {"name": "건설·건자재 분야", "analysts": [{"firm": "교보증권", "name": "이상호"}, {"firm": "다올투자증권", "name": "박영도"}, {"firm": "메리츠증권", "name": "문경원"}, {"firm": "미래에셋증권", "name": "김기룡"}, {"firm": "삼성증권", "name": "허재준"}, {"firm": "상상인증권", "name": "김진범"}, {"firm": "신영증권", "name": "박세라"}, {"firm": "신한투자증권", "name": "김선미"}, {"firm": "유안타증권", "name": "김도엽"}, {"firm": "유진투자증권", "name": "류태환"}, {"firm": "키움증권", "name": "신대현"}, {"firm": "하나증권", "name": "김승준"}, {"firm": "한국투자증권", "name": "강경태"}, {"firm": "한화투자증권", "name": "송유림"}, {"firm": "현대차증권", "name": "신동현"}, {"firm": "BNK투자증권", "name": "이선일"}, {"firm": "IBK투자증권", "name": "조정현"}, {"firm": "iM증권", "name": "배세호"}, {"firm": "KB증권", "name": "장문준"}, {"firm": "LS증권", "name": "김세련"}, {"firm": "NH투자증권", "name": "이은상"}], "num": 20}, {"name": "지주회사 분야", "analysts": [{"firm": "대신증권", "name": "이경연"}, {"firm": "삼성증권", "name": "박세웅"}, {"firm": "신한투자증권", "name": "은경완"}, {"firm": "유안타증권", "name": "이승웅"}, {"firm": "키움증권", "name": "안영준"}, {"firm": "하나증권", "name": "최정욱"}, {"firm": "한국투자증권", "name": "이나예"}, {"firm": "한화투자증권", "name": "이진협"}, {"firm": "흥국증권", "name": "박종렬"}, {"firm": "BNK투자증권", "name": "김장원"}, {"firm": "DS투자증권", "name": "김수현"}, {"firm": "iM증권", "name": "이상헌"}, {"firm": "KB증권", "name": "김준섭"}, {"firm": "NH투자증권", "name": "이승영"}, {"firm": "SK증권", "name": "최관순"}], "num": 21}, {"name": "AI·로보틱스 분야", "analysts": [{"firm": "교보증권", "name": "김동우"}, {"firm": "다올투자증권", "name": "오정하"}, {"firm": "메리츠증권", "name": "이지호"}, {"firm": "미래에셋증권", "name": "박선영"}, {"firm": "삼성증권", "name": "서지현"}, {"firm": "상상인증권", "name": "김경태"}, {"firm": "신영증권", "name": "강석용"}, {"firm": "신한투자증권", "name": "최승환"}, {"firm": "유진투자증권", "name": "양승윤"}, {"firm": "키움증권", "name": "신민수"}, {"firm": "하나증권", "name": "한유건"}, {"firm": "한국투자증권", "name": "최건"}, {"firm": "한화투자증권", "name": "김성래"}, {"firm": "현대차증권", "name": "윤동욱"}, {"firm": "DB증권", "name": "남주신"}, {"firm": "DS투자증권", "name": "이수림"}, {"firm": "IBK투자증권", "name": "이승훈"}, {"firm": "iM증권", "name": "이상수"}, {"firm": "KB증권", "name": "김선봉"}, {"firm": "LS증권", "name": "이병근"}, {"firm": "NH투자증권", "name": "고민성"}, {"firm": "SK증권", "name": "이동주"}], "num": 22}, {"name": "스몰캡 분야", "analysts": [{"firm": "교보증권", "name": "(2026/05/13) 왜 이 기업일까? 5월호 전력 수요 확대 속 숨은 진주"}, {"firm": "다올투자증권", "name": "(2026/03/17) 의료기기(Overweight) - 글로벌 시장을 향한 두 갈래 길"}, {"firm": "대신증권", "name": "(2026/03/03) 바뀐 네트워크의 중심: Everything Goes Optical"}, {"firm": "미래에셋증권", "name": "(2026/06/01) [2026년 하반기 전망] - [의료기기] : 의료기기 , 코스닥을 구하라"}, {"firm": "삼성증권", "name": "(2026/01/30) Tech(OVERWEIGHT) - 반도체 소부장 - 재평가의 시간"}, {"firm": "상상인증권", "name": "(2026/01/28) 인바디"}, {"firm": "신한투자증권", "name": "(2026/05/22) [2H26 산업 전망] 혁신성장; 초성장 옴니버스"}, {"firm": "유안타증권", "name": "(2026/05/15) 2026년 하반기 코스닥 시즌2 시작"}, {"firm": "유진투자증권", "name": "(2026/01/26) 전기차/배터리산업 - K배터리 소재/부품 주가 강세 원인"}, {"firm": "키움증권", "name": "(2026/05/07) 코스닥 전략노트5"}, {"firm": "하나증권", "name": "(2026/02/23) 별빛 아래의 전쟁: 우주경제 확장과 우주 패권의 재편"}, {"firm": "한국투자증권", "name": "(2026/04/16) 코스닥 활성화 정책과 옥석 가리기"}, {"firm": "한양증권", "name": "(2026/03/10) [상신이디피]가장 먼저 턴어라운드하고 출발하겠습니다"}, {"firm": "흥국증권", "name": "(2026/04/13) 스팩과 합병상장-콤팩트하고 강력하게"}, {"firm": "DS투자증권", "name": "(2026/04/16) 4월의 일타종목 feat. DS투자증권"}, {"firm": "IBK투자증권", "name": "(2026/05/11) [코스닥 밸류업의 위대한 여정] 서른 번의 두근거림"}, {"firm": "iM증권", "name": "(2026/01/05) 우주 대항해 시대(走馬加鞭): 올해부터 우주경제 성장 가속화"}, {"firm": "KB증권", "name": "(2026/03/18) [우주] 일론, 우주시대가 올까요?"}, {"firm": "LS증권", "name": "(2026/04/28) 5월 Value & Growth"}, {"firm": "NH투자증권", "name": "(2026/05/26) [미드/스몰캡] 하반기에는 정책의 힘을 믿어보자"}, {"firm": "SK증권", "name": "(2026/02/09) 우주 경제 리프라이싱 시대"}], "num": 23}, {"name": "글로벌 기업분석 분야", "analysts": [{"firm": "메리츠증권", "name": "김동관"}, {"firm": "삼성증권", "name": "김중한"}, {"firm": "신영증권", "name": "강석용"}, {"firm": "신한투자증권", "name": "최원석"}, {"firm": "유안타증권", "name": "황병준"}, {"firm": "유진투자증권", "name": "박재환"}, {"firm": "키움증권", "name": "박기현"}, {"firm": "하나증권", "name": "강재구"}, {"firm": "한국투자증권", "name": "이동연"}, {"firm": "현대차증권", "name": "장문영"}, {"firm": "IBK투자증권", "name": "조경진"}, {"firm": "iM증권", "name": "박윤철"}, {"firm": "KB증권", "name": "김세환"}, {"firm": "NH투자증권", "name": "고민성"}, {"firm": "SK증권", "name": "박제민"}], "num": 24}, {"name": "거시경제·금리 분야", "analysts": [{"firm": "교보증권", "name": "위재현"}, {"firm": "다올투자증권", "name": "조병현"}, {"firm": "대신증권", "name": "이정훈"}, {"firm": "메리츠증권", "name": "이승훈"}, {"firm": "미래에셋증권", "name": "민지희"}, {"firm": "삼성증권", "name": "허진욱"}, {"firm": "상상인증권", "name": "정원일"}, {"firm": "신영증권", "name": "조용구"}, {"firm": "신한투자증권", "name": "하건형"}, {"firm": "유안타증권", "name": "김호정"}, {"firm": "유진투자증권", "name": "방인성"}, {"firm": "키움증권", "name": "김유미"}, {"firm": "하나증권", "name": "전규연"}, {"firm": "한국투자증권", "name": "최지욱"}, {"firm": "한화투자증권", "name": "임혜윤"}, {"firm": "현대차증권", "name": "최제민"}, {"firm": "흥국증권", "name": "김진성"}, {"firm": "BNK투자증권", "name": "김성노"}, {"firm": "DB증권", "name": "박성우"}, {"firm": "IBK투자증권", "name": "정용택"}, {"firm": "iM증권", "name": "박상현"}, {"firm": "KB증권", "name": "권희진"}, {"firm": "LS증권", "name": "최광혁"}, {"firm": "NH투자증권", "name": "안기태"}, {"firm": "SK증권", "name": "신윤정"}], "num": 25}, {"name": "투자 전략 분야", "analysts": [{"firm": "교보증권", "name": "김준우"}, {"firm": "다올투자증권", "name": "조병현"}, {"firm": "대신증권", "name": "이경민"}, {"firm": "메리츠증권", "name": "황수욱"}, {"firm": "미래에셋증권", "name": "유명간"}, {"firm": "삼성증권", "name": "양일우"}, {"firm": "상상인증권", "name": "정원일"}, {"firm": "신한투자증권", "name": "노동길"}, {"firm": "유안타증권", "name": "김용구"}, {"firm": "유진투자증권", "name": "허재환"}, {"firm": "키움증권", "name": "한지영"}, {"firm": "하나증권", "name": "이재만"}, {"firm": "한국투자증권", "name": "김대준"}, {"firm": "현대차증권", "name": "김재승"}, {"firm": "흥국증권", "name": "이영원"}, {"firm": "DB증권", "name": "강현기"}, {"firm": "DS투자증권", "name": "양형모"}, {"firm": "IBK투자증권", "name": "변준호"}, {"firm": "iM증권", "name": "김준영"}, {"firm": "KB증권", "name": "이은택"}, {"firm": "LS증권", "name": "정다운"}, {"firm": "NH투자증권", "name": "김병연"}, {"firm": "SK증권", "name": "강대승"}], "num": 26}, {"name": "계량 분석 분야", "analysts": [{"firm": "교보증권", "name": "정상휘"}, {"firm": "다올투자증권", "name": "김경훈"}, {"firm": "대신증권", "name": "권순호"}, {"firm": "메리츠증권", "name": "이상현"}, {"firm": "미래에셋증권", "name": "유명간"}, {"firm": "삼성증권", "name": "김동영"}, {"firm": "상상인증권", "name": "정원일"}, {"firm": "신영증권", "name": "강기훈"}, {"firm": "신한투자증권", "name": "이정빈"}, {"firm": "유안타증권", "name": "신현용"}, {"firm": "유진투자증권", "name": "안지선"}, {"firm": "키움증권", "name": "최재원"}, {"firm": "하나증권", "name": "이경수"}, {"firm": "한국투자증권", "name": "염동찬"}, {"firm": "한화투자증권", "name": "안현국"}, {"firm": "현대차증권", "name": "조창민"}, {"firm": "BNK투자증권", "name": "최원곤"}, {"firm": "DB증권", "name": "설태현"}, {"firm": "DS투자증권", "name": "김남일"}, {"firm": "iM증권", "name": "서한백"}, {"firm": "KB증권", "name": "김민규"}, {"firm": "LS증권", "name": "고세은"}, {"firm": "NH투자증권", "name": "김규진"}, {"firm": "SK증권", "name": "황지우"}], "num": 27}, {"name": "데일리 시황 분야", "analysts": [{"firm": "다올투자증권", "name": "김지현"}, {"firm": "대신증권", "name": "이경민"}, {"firm": "메리츠증권", "name": "황수욱"}, {"firm": "미래에셋증권", "name": "김석환"}, {"firm": "삼성증권", "name": "서정훈"}, {"firm": "신영증권", "name": "이상연"}, {"firm": "신한투자증권", "name": "강진혁"}, {"firm": "유안타증권", "name": "이재원"}, {"firm": "유진투자증권", "name": "허재환"}, {"firm": "키움증권", "name": "한지영"}, {"firm": "하나증권", "name": "김두언"}, {"firm": "한국투자증권", "name": "김대준"}, {"firm": "iM증권", "name": "김준영"}, {"firm": "KB증권", "name": "하인환"}, {"firm": "LS증권", "name": "황산해"}, {"firm": "NH투자증권", "name": "나정환"}, {"firm": "SK증권", "name": "조준기"}], "num": 28}, {"name": "글로벌 투자전략 분야 - 미국·선진국", "analysts": [{"firm": "교보증권", "name": "백윤민"}, {"firm": "대신증권", "name": "문남중"}, {"firm": "메리츠증권", "name": "황수욱"}, {"firm": "미래에셋증권", "name": "김성근"}, {"firm": "삼성증권", "name": "박혜란"}, {"firm": "상상인증권", "name": "김경태"}, {"firm": "신영증권", "name": "김효진"}, {"firm": "신한투자증권", "name": "김성환"}, {"firm": "유안타증권", "name": "김용구"}, {"firm": "유진투자증권", "name": "허재환"}, {"firm": "키움증권", "name": "김승혁"}, {"firm": "하나증권", "name": "이재만"}, {"firm": "한국투자증권", "name": "최보원"}, {"firm": "현대차증권", "name": "하장권"}, {"firm": "DB증권", "name": "이진경"}, {"firm": "iM증권", "name": "박상현"}, {"firm": "KB증권", "name": "김일혁"}, {"firm": "NH투자증권", "name": "김환"}], "num": 29}, {"name": "글로벌 투자전략 분야 - 중국·신흥국", "analysts": [{"firm": "대신증권", "name": "문건우"}, {"firm": "메리츠증권", "name": "최설화"}, {"firm": "미래에셋증권", "name": "박수진"}, {"firm": "삼성증권", "name": "전종규"}, {"firm": "신영증권", "name": "성연주"}, {"firm": "신한투자증권", "name": "신승웅"}, {"firm": "유안타증권", "name": "민병규"}, {"firm": "유진투자증권", "name": "백은비"}, {"firm": "키움증권", "name": "박주영"}, {"firm": "하나증권", "name": "김경환"}, {"firm": "한국투자증권", "name": "정정영"}, {"firm": "한화투자증권", "name": "박유진"}, {"firm": "현대차증권", "name": "여태경"}, {"firm": "DB증권", "name": "김선영"}, {"firm": "iM증권", "name": "박상현"}, {"firm": "KB증권", "name": "박수현"}, {"firm": "NH투자증권", "name": "박인금"}], "num": 30}, {"name": "ESG 분야", "analysts": [{"firm": "교보증권", "name": "조혜빈"}, {"firm": "다올투자증권", "name": "조병현"}, {"firm": "대신증권", "name": "이경연"}, {"firm": "메리츠증권", "name": "이진아"}, {"firm": "미래에셋증권", "name": "유건호"}, {"firm": "삼성증권", "name": "손서원"}, {"firm": "상상인증권", "name": "백영찬"}, {"firm": "신영증권", "name": "오광영"}, {"firm": "신한투자증권", "name": "이정빈"}, {"firm": "유안타증권", "name": "김호정"}, {"firm": "유진투자증권", "name": "한병화"}, {"firm": "키움증권", "name": "안예하"}, {"firm": "하나증권", "name": "김상만"}, {"firm": "한국투자증권", "name": "정다솜"}, {"firm": "한화투자증권", "name": "박세연"}, {"firm": "현대차증권", "name": "이화진"}, {"firm": "흥국증권", "name": "이영원"}, {"firm": "DB증권", "name": "설태현"}, {"firm": "iM증권", "name": "이상헌"}, {"firm": "KB증권", "name": "김준섭"}, {"firm": "LS증권", "name": "김윤정"}, {"firm": "NH투자증권", "name": "이승영"}, {"firm": "SK증권", "name": "최관순"}], "num": 31}];
+const BALLOTS=6, PER=2, BUDGET=BALLOTS*PER /*12*/, CAP=BALLOTS /*6*/;
+const STORE = (typeof window!=='undefined' && window.storage && typeof window.storage.set==='function') ? window.storage : null;
+let picks={};   // {sectorNum: { 'firm·name': {firm,name,pts,write} }}
+let active=0, mode='vote', searchTerm='', _poll=null;
+
+function key(c){return c.firm+'·'+c.name;}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function smap(n){return picks[n]||{};}
+function sumPts(n){return Object.values(smap(n)).reduce((a,x)=>a+x.pts,0);}
+function shortName(nm){return (nm||'').replace(/분야/g,'').replace(/\s+/g,' ').trim();}
+
+function setMode(m){mode=m;
+  document.getElementById('m-vote').classList.toggle('on',m==='vote');
+  document.getElementById('m-admin').classList.toggle('on',m==='admin');
+  document.getElementById('view-vote').style.display=m==='vote'?'':'none';
+  document.getElementById('view-admin').style.display=m==='admin'?'':'none';
+  document.getElementById('dock').style.display=m==='vote'?'':'none';
+  if(_poll){clearInterval(_poll);_poll=null;}
+  if(m==='admin'){refreshAdmin(); if(STORE) _poll=setInterval(refreshAdmin,4000);}}
+
+function renderBoard(){
+  const g=document.getElementById('boardgrid');g.innerHTML='';let done=0,total=0;
+  SECTORS.forEach((s,i)=>{const p=sumPts(s.num);total+=p;
+    const cell=document.createElement('div');
+    cell.className='cell'+(p>=BUDGET?' full':p>0?' partial':'')+(i===active?' active':'');
+    cell.innerHTML=`<span class="cn">${s.num}</span><span class="csn">${shortName(s.name)}</span>`;cell.title=s.name+' — '+p+'점';
+    cell.onclick=()=>{active=i;renderSector();renderBoard();document.getElementById('sectorhost').scrollIntoView({behavior:'smooth',block:'start'});};
+    if(p>=BUDGET)done++;g.appendChild(cell);});
+  document.getElementById('boardcount').textContent=`${done} / 31 가득 채움 · 총 ${total}점 배분`;
+  document.getElementById('dockdone').textContent=Object.keys(picks).filter(n=>sumPts(n)>0).length;
+  document.getElementById('dockpts').textContent=total;}
+
+function renderSector(){
+  searchTerm='';const s=SECTORS[active];const host=document.getElementById('sectorhost');
+  host.innerHTML=`<div class="sector" id="sectorcard">
+    <div class="sector-top"><span class="sector-no">${String(s.num).padStart(2,'0')} / 31</span><h2>${s.name}</h2></div>
+    <div class="budget" id="budget"><div class="lab"><span>이 부문 배분 점수 · 1인 최대 6점</span><span><b id="usedpts">0</b> / 12점</span></div>
+      <div class="track"><div class="fill" id="budgetfill"></div></div></div>
+    <div class="toolbar"><input class="search" id="searchbox" placeholder="증권사·이름으로 빠르게 찾기" oninput="onSearch(this.value)"></div>
+    <ul class="cands" id="cands"></ul>
+    <div class="writein"><span class="eyebrow">명단에 없는 애널리스트 직접 입력</span>
+      <div class="row">
+        <div class="field" style="margin-bottom:0"><label>증권사</label><input id="wi-firm" placeholder="예: ○○증권"></div>
+        <div class="field" style="margin-bottom:0"><label>이름</label><input id="wi-name" placeholder="예: 홍길동"></div>
+        <button class="btn ghost" style="align-self:flex-end" onclick="addWriteIn()">추가</button>
+      </div></div></div>`;
+  renderCands();updateBudget();}
+function onSearch(v){searchTerm=v.trim();renderCands();}
+function updateBudget(){
+  const s=SECTORS[active];const used=sumPts(s.num);
+  document.getElementById('usedpts').textContent=used;
+  const b=document.getElementById('budget');b.classList.toggle('over',used>BUDGET);
+  document.getElementById('budgetfill').style.width=Math.min(100,used/BUDGET*100)+'%';}
+function renderCands(){
+  const s=SECTORS[active];const m=smap(s.num);const ul=document.getElementById('cands');ul.innerHTML='';
+  const list=s.analysts.map(a=>({...a}));
+  Object.values(m).filter(c=>c.write).forEach(c=>{if(!list.some(a=>key(a)===key(c)))list.unshift({...c,write:true});});
+  const used=sumPts(s.num);
+  list.forEach(a=>{
+    if(searchTerm && !(a.firm.includes(searchTerm)||a.name.includes(searchTerm)))return;
+    const cur=m[key(a)]?m[key(a)].pts:0;
+    const li=document.createElement('li');li.className='cand'+(cur>0?' has':'');
+    li.innerHTML=`<span class="who"><b>${a.name}${a.write?' <small style="color:var(--clay)">직접입력</small>':''}</b><small>${a.firm}</small></span>
+      <div class="stepper">
+        <button ${cur<=0?'disabled':''} data-d="-1">−</button>
+        <span class="v ${cur===0?'zero':''}">${cur}</span>
+        <button ${(cur>=CAP||used>=BUDGET)?'disabled':''} data-d="1">+</button>
+      </div>`;
+    li.querySelectorAll('button').forEach(btn=>btn.onclick=()=>setPts(a,parseInt(btn.dataset.d)));
+    ul.appendChild(li);});}
+function setPts(a,d){
+  const n=SECTORS[active].num;picks[n]=picks[n]||{};const k=key(a);
+  const cur=picks[n][k]?picks[n][k].pts:0;const used=sumPts(n);
+  let next=cur+d;
+  if(next<0)next=0;
+  if(next>CAP){toast('한 애널리스트는 최대 6점(6부)까지');return;}
+  if(d>0 && used>=BUDGET){toast('이 부문은 이미 12점을 다 배분했어요');return;}
+  if(next===0){delete picks[n][k];} else {picks[n][k]={firm:a.firm,name:a.name,pts:next,write:!!a.write};}
+  if(Object.keys(picks[n]).length===0)delete picks[n];
+  renderCands();updateBudget();renderBoard();saveDraft();}
+function addWriteIn(){
+  const firm=document.getElementById('wi-firm').value.trim(),name=document.getElementById('wi-name').value.trim();
+  if(!firm||!name){toast('증권사와 이름을 모두 입력하세요');return;}
+  if(sumPts(SECTORS[active].num)>=BUDGET){toast('이 부문은 이미 12점을 다 배분했어요');return;}
+  setPts({firm,name,write:true},1);
+  document.getElementById('wi-firm').value='';document.getElementById('wi-name').value='';
+  renderSector();renderBoard();saveDraft();}
+function step(d){active=Math.max(0,Math.min(SECTORS.length-1,active+d));renderSector();renderBoard();
+  document.getElementById('sectorhost').scrollIntoView({behavior:'smooth',block:'start'});}
+
+function curName(){return document.getElementById('nm').value.trim();}
+function toArrayPicks(){const o={};Object.entries(picks).forEach(([n,m])=>{o[n]=Object.values(m).map(c=>({firm:c.firm,name:c.name,pts:c.pts,write:c.write}));});return o;}
+function safeName(s){return (s||'응답').replace(/[\\/:*?"<>|]/g,'_');}
+function downloadJSON(fn,obj){const blob=new Blob([JSON.stringify(obj)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();a.remove();}
+function encodeRec(rec){return btoa(unescape(encodeURIComponent(JSON.stringify(rec))));}
+function decodeRec(code){return JSON.parse(decodeURIComponent(escape(atob((code||'').replace(/\s+/g,'')))));}
+function applyRec(rec){
+  document.getElementById('nm').value=rec.name||'';document.getElementById('dept').value=rec.dept||'';
+  picks={};Object.entries(rec.picks||{}).forEach(([n,arr])=>{picks[n]={};arr.forEach(c=>picks[n][key(c)]={firm:c.firm,name:c.name,pts:c.pts,write:c.write});});
+  renderSector();renderBoard();}
+
+/* ---- draft: auto-save in-progress answers (per-user private), restore on load ---- */
+let _draftT=null;
+function saveDraft(){if(!STORE)return;clearTimeout(_draftT);_draftT=setTimeout(async()=>{
+  try{await STORE.set('draft',JSON.stringify({name:curName(),dept:document.getElementById('dept').value.trim(),ts:Date.now(),picks:toArrayPicks()}),false);}catch(e){}
+},500);}
+async function restoreDraft(){if(!STORE)return false;
+  try{const r=await STORE.get('draft',false);if(r){const rec=JSON.parse(r.value);
+    if(rec&&(rec.name||Object.keys(rec.picks||{}).length)){applyRec(rec);return true;}}}catch(e){}
+  return false;}
+
+async function submitVote(){
+  const name=curName();if(!name){toast('이름을 먼저 입력하세요');document.getElementById('nm').focus();return;}
+  const total=Object.keys(picks).reduce((a,n)=>a+sumPts(n),0);
+  if(total===0){toast('최소 한 부문은 배분해주세요');return;}
+  const rec={name,dept:document.getElementById('dept').value.trim(),ts:Date.now(),picks:toArrayPicks()};
+  window._myRec=rec;window._myCode=encodeRec(rec);
+  if(STORE){try{await STORE.set('response:'+name,JSON.stringify(rec),true);}catch(e){}}
+  showSubmitResult(rec);
+  toast('제출 완료 — 아래 코드를 복사해 보내주세요');}
+function showSubmitResult(rec){
+  document.getElementById('submitresult').innerHTML=
+    `<div class="card" style="border-color:#AED8C6;background:var(--green-soft)">
+      <span class="eyebrow" style="color:var(--green)">제출 완료 — ${rec.name}</span>
+      <p class="hint" style="margin-top:6px;color:var(--ink)">아래 <b>응답 코드</b>를 복사해 취합 담당자에게 보내주세요.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn primary" onclick="copyMyCode()">응답 코드 복사</button>
+        <button class="btn ghost" onclick="downloadJSON('투표_'+${JSON.stringify(safeName(rec.name))}+'.json',window._myRec)">파일로도 저장</button>
+      </div>
+      <textarea readonly rows="3" onclick="this.select()" style="width:100%;margin-top:8px;font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical">${window._myCode}</textarea>
+    </div>`;
+  document.getElementById('submitresult').scrollIntoView({behavior:'smooth',block:'center'});}
+function copyMyCode(){const t=window._myCode||'';
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast('코드를 복사했어요'),()=>toast('복사 실패 — 코드를 길게 눌러 직접 복사하세요'));}
+  else toast('코드 칸을 눌러 전체 선택 후 복사하세요');}
+function importMine(files){const f=files&&files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{applyRec(JSON.parse(rd.result));toast('내 응답을 불러왔어요 — 수정 후 다시 저장하세요');}catch(e){toast('파일을 읽을 수 없습니다');}};
+  rd.onerror=()=>toast('파일을 읽을 수 없습니다');rd.readAsText(f);
+  document.getElementById('importmine').value='';}
+
+/* ---- admin: in-memory collection from files / codes ---- */
+window._adminResponses=[];
+function addResponse(rec){if(!rec||!rec.name)return false;
+  const i=window._adminResponses.findIndex(r=>r.name===rec.name);
+  if(i>=0)window._adminResponses[i]=rec;else window._adminResponses.push(rec);return true;}
+function importFiles(files){const arr=[...files];let pending=arr.length,n=0;if(!pending)return;
+  arr.forEach(f=>{const rd=new FileReader();
+    rd.onload=()=>{try{if(addResponse(JSON.parse(rd.result)))n++;}catch(e){}finally{if(--pending===0){renderAdmin();toast(n+'명 응답을 불러왔어요');}}};
+    rd.onerror=()=>{if(--pending===0){renderAdmin();toast(n+'명 응답을 불러왔어요');}};
+    rd.readAsText(f);});
+  document.getElementById('importfiles').value='';}
+function importCodes(){const raw=(document.getElementById('codebox').value||'');
+  const tokens=raw.split(/\s+/).map(s=>s.trim()).filter(Boolean);
+  let n=0,fail=0;tokens.forEach(c=>{try{if(addResponse(decodeRec(c)))n++;else fail++;}catch(e){fail++;}});
+  renderAdmin();toast(fail?`${n}명 불러옴 · ${fail}개 인식 실패`:`${n}명 응답을 불러왔어요`);}
+function allocate(counts){ // counts:[{c,votes}] votes=summed pts
+  const withV=counts.filter(x=>x.votes>0);const totalV=withV.reduce((a,x)=>a+x.votes,0);if(!totalV)return[];
+  let alloc=withV.map(x=>{const raw=x.votes/totalV*BUDGET;return{c:x.c,votes:x.votes,base:Math.floor(raw),rem:raw-Math.floor(raw),pts:0};});
+  alloc.forEach(a=>a.pts=Math.min(a.base,CAP));let used=alloc.reduce((a,x)=>a+x.pts,0);
+  let order=[...alloc].sort((a,b)=>b.rem-a.rem||b.votes-a.votes);let gi=0;
+  while(used<BUDGET){let placed=false;for(let i=0;i<order.length;i++){const a=order[(gi+i)%order.length];if(a.pts<CAP){a.pts++;used++;placed=true;gi=(gi+i+1)%order.length;break;}}if(!placed)break;}
+  return alloc.filter(a=>a.pts>0).sort((a,b)=>b.pts-a.pts||b.votes-a.votes);}
+function buildBallots(alloc){
+  let pool=[];alloc.forEach(a=>{for(let i=0;i<a.pts;i++)pool.push(a.c);});const ballots=[];
+  for(let b=0;b<BALLOTS;b++){const freq={};pool.forEach(c=>freq[key(c)]=(freq[key(c)]||0)+1);
+    const uniq=[...new Set(pool.map(key))].sort((x,y)=>freq[y]-freq[x]);const pair=[];
+    for(const uk of uniq){if(pair.length<2)pair.push(uk);}
+    pair.forEach(uk=>{const idx=pool.findIndex(c=>key(c)===uk);if(idx>=0)pool.splice(idx,1);});
+    ballots.push(pair.map(uk=>{const a=alloc.find(x=>key(x.c)===uk);return a?a.c:{firm:'',name:'—'};}));}
+  return ballots;}
+function classify(counts){
+  const withV=counts.filter(x=>x.votes>0);const total=withV.reduce((a,x)=>a+x.votes,0);
+  if(total<=BUDGET)return['ok','🟢 여유'];
+  const v=withV.map(x=>x.votes);
+  if((v[1]!==undefined&&v[2]!==undefined&&v[1]===v[2])||withV.length>6||total>BUDGET*2)return['coord','🔴 조율 필요'];
+  return['review','🟡 경합'];}
+async function refreshAdmin(){
+  if(STORE){try{const list=await STORE.list('response:',true);const recs=[];
+    for(const k of ((list&&list.keys)||[])){try{const r=await STORE.get(k,true);if(r)recs.push(JSON.parse(r.value));}catch(e){}}
+    window._adminResponses=recs;}catch(e){}}
+  renderAdmin();}
+
+function sectorTally(responses,sec){
+  const tally={};responses.forEach(r=>{(r.picks?.[sec.num]||[]).forEach(c=>{const k=key(c);if(!tally[k])tally[k]={c,votes:0};tally[k].votes+=(c.pts||0);});});
+  return Object.values(tally).filter(x=>x.votes>0).sort((a,b)=>b.votes-a.votes);}
+function sectorContributors(responses,sec){ // [{name,dept,pts}] who gave any points in this sector
+  const out=[];responses.forEach(r=>{const sp=(r.picks?.[sec.num]||[]).reduce((a,c)=>a+(c.pts||0),0);if(sp>0)out.push({name:r.name,dept:r.dept||'',pts:sp});});
+  return out.sort((a,b)=>b.pts-a.pts);}
+
+function renderAdmin(){
+  const responses=window._adminResponses||[];window._lastResponses=responses;
+  // banner
+  document.getElementById('modebanner').innerHTML = STORE
+    ? '<div class="banner auto">자동 집계 모드 — 직원이 제출하면 이 화면에 바로 쌓입니다. (4초마다 자동 새로고침)</div>'
+    : '';
+  // progress
+  const head=Math.max(1,parseInt(document.getElementById('headcount').value)||20);
+  const prog=document.getElementById('prog'),pf=document.getElementById('progfill');
+  if(prog){prog.textContent=`${responses.length} / ${head}`;pf.style.width=Math.min(100,responses.length/head*100)+'%';}
+  // stats
+  let totalPts=0,touched=new Set();
+  responses.forEach(r=>Object.entries(r.picks||{}).forEach(([n,p])=>{const sp=p.reduce((a,c)=>a+(c.pts||0),0);totalPts+=sp;if(sp)touched.add(n);}));
+  // count sectors at/over 12
+  let full=0,over=0;
+  SECTORS.forEach(s=>{const tot=sectorTally(responses,s).reduce((a,x)=>a+x.votes,0);if(tot>12)over++;else if(tot===12)full++;});
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="n">${responses.length}</div><div class="l">제출한 응답자</div></div>
+    <div class="stat"><div class="n">${touched.size}</div><div class="l">투표된 부문 (31 중)</div></div>
+    <div class="stat"><div class="n" style="color:var(--clay)">${full+over}</div><div class="l">12점 도달·초과 부문</div></div>
+    <div class="stat"><div class="n">${totalPts}</div><div class="l">총 배분 점수</div></div>`;
+
+  if(responses.length===0){
+    document.getElementById('coordcard').style.display='none';
+    document.getElementById('resphost').innerHTML='<div class="empty" style="padding:24px 0">아직 응답이 없습니다.</div>';
+    document.getElementById('agghost').innerHTML='';
+    return;}
+
+  renderCoord(responses);
+  renderRespondents(responses);
+  renderSectorDetail(responses);}
+
+function renderCoord(responses){
+  const card=document.getElementById('coordcard'),host=document.getElementById('coordhost');
+  const items=[];
+  SECTORS.forEach(s=>{
+    const counts=sectorTally(responses,s);if(!counts.length)return;
+    const total=counts.reduce((a,x)=>a+x.votes,0);
+    const[fc,fl]=classify(counts);
+    if(total<12)return; // only those that reached or exceeded 12
+    const contrib=sectorContributors(responses,s);
+    const cls=total>12?'':'exact';
+    const label=total>12?'🔴 초과 — 조율 필요':'🟦 마감(정확히 12점)';
+    items.push(`<div class="coord-item ${cls}">
+      <div class="coord-head"><span class="sno">${String(s.num).padStart(2,'0')}</span><span class="snm">${s.name}</span>
+        <span class="sum" style="color:${total>12?'var(--clay)':'var(--indigo)'}">${label} · 합산 ${total}점</span></div>
+      <div class="people">${contrib.map(p=>`<span class="person-chip">${p.name}${p.dept?' · '+p.dept:''} <b>${p.pts}점</b></span>`).join('')}</div>
+    </div>`);});
+  if(items.length===0){card.style.display='none';return;}
+  card.style.display='';host.innerHTML=items.join('');}
+
+function renderRespondents(responses){
+  const host=document.getElementById('resphost');
+  const rows=[...responses].sort((a,b)=>(b.ts||0)-(a.ts||0)).map((r,idx)=>{
+    const ents=Object.entries(r.picks||{}).filter(([n,p])=>p.reduce((a,c)=>a+(c.pts||0),0)>0);
+    const tp=ents.reduce((a,[n,p])=>a+p.reduce((x,c)=>x+(c.pts||0),0),0);
+    const detail=ents.sort((a,b)=>a[0]-b[0]).map(([n,p])=>{const s=SECTORS.find(x=>String(x.num)===String(n));
+      const inner=p.slice().sort((a,b)=>b.pts-a.pts).map(c=>`${c.name}(${c.firm}) <b>${c.pts}</b>`).join(' · ');
+      return `<div class="rd-sector"><div class="sname">${s?s.name:n}</div><div class="rd-picks">${inner}</div></div>`;}).join('');
+    return `<div class="resp-row" id="resp${idx}">
+      <button class="resp-btn" onclick="document.getElementById('resp${idx}').classList.toggle('open')">
+        <span class="chev">▸</span>
+        <span><span class="nm">${r.name}</span>${r.dept?` <span class="dept">· ${r.dept}</span>`:''}</span>
+        <span class="meta">${ents.length}개 부문 · ${tp}점</span></button>
+      <div class="resp-detail">${detail||'<div class="rd-picks">배분 내역 없음</div>'}</div></div>`;});
+  host.innerHTML=rows.join('');}
+
+function renderSectorDetail(responses){
+  const host=document.getElementById('agghost');host.innerHTML='';
+  SECTORS.forEach(s=>{
+    const counts=sectorTally(responses,s);if(!counts.length)return;
+    const[fc,fl]=classify(counts);const alloc=allocate(counts);const ballots=buildBallots(alloc);const maxV=counts[0].votes;
+    const total=counts.reduce((a,x)=>a+x.votes,0);
+    const card=document.createElement('div');card.className='agg-sector';
+    card.innerHTML=`<div class="agg-head"><span class="sector-no">${String(s.num).padStart(2,'0')}</span><h3>${s.name}</h3>
+      <span class="flag ${fc}" style="margin-left:auto">${fl} · 합산 ${total}점</span></div>
+      <table class="tally"><thead><tr><th>애널리스트</th><th>합산점수</th><th style="width:36%"></th><th>최종배분</th></tr></thead>
+      <tbody>${counts.map(x=>{const a=alloc.find(z=>key(z.c)===key(x.c));const pts=a?a.pts:0;
+        return `<tr><td><span class="nm">${x.c.name}</span> <span class="fm">${x.c.firm}${x.c.write?' · 직접입력':''}</span></td>
+        <td class="votes">${x.votes}</td><td><div class="barwrap"><div class="bar" style="width:${Math.round(x.votes/maxV*100)}%"></div></div></td>
+        <td class="pts">${pts?pts+'점':'—'}</td></tr>`;}).join('')}</tbody></table>
+      <div style="margin-top:10px"><span class="eyebrow">최종 6부 기재 예시</span>
+      <div class="ballotstrip">${ballots.map((b,i)=>`<div class="ballot"><div class="bl">${i+1}부</div>
+        ${b.map(c=>`<div class="p">${c.name} <small>${c.firm}</small></div>`).join('')}</div>`).join('')}</div></div>`;
+    host.appendChild(card);});}
+
+function dl(fn,text){const blob=new Blob(['\ufeff'+text],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();}
+function csvCell(s){s=(s==null?'':String(s));return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function exportResponses(){const R=window._lastResponses||[];
+  const rows=[['응답자','부서','제출시각','부문번호','부문','증권사','애널리스트','배분점수','직접입력']];
+  R.forEach(r=>Object.entries(r.picks||{}).forEach(([n,p])=>{const s=SECTORS.find(x=>String(x.num)===String(n));
+    p.forEach(c=>rows.push([r.name,r.dept||'',new Date(r.ts).toLocaleString('ko-KR'),n,s?s.name:'',c.firm,c.name,c.pts,c.write?'Y':'']));}));
+  dl('응답_원본.csv',rows.map(r=>r.map(csvCell).join(',')).join('\n'));toast('응답 CSV를 내려받았어요');}
+function exportTally(){const R=window._lastResponses||[];
+  const rows=[['부문번호','부문','애널리스트','증권사','합산점수','최종배분','상태']];
+  SECTORS.forEach(s=>{const tally={};R.forEach(r=>{(r.picks?.[s.num]||[]).forEach(c=>{const k=key(c);if(!tally[k])tally[k]={c,votes:0};tally[k].votes+=(c.pts||0);});});
+    const counts=Object.values(tally).filter(x=>x.votes>0).sort((a,b)=>b.votes-a.votes);if(!counts.length)return;
+    const[,fl]=classify(counts);const alloc=allocate(counts);
+    counts.forEach(x=>{const a=alloc.find(z=>key(z.c)===key(x.c));rows.push([s.num,s.name,x.c.name,x.c.firm,x.votes,a?a.pts:0,fl.replace(/^[^ ]+ /,'')]);});});
+  dl('부문별_집계.csv',rows.map(r=>r.map(csvCell).join(',')).join('\n'));toast('집계 CSV를 내려받았어요');}
+
+(async()=>{
+  let restored=false;
+  if(STORE){try{restored=await restoreDraft();}catch(e){}}
+  if(!restored){renderSector();renderBoard();}
+  else toast('이전에 작성하던 내용을 불러왔어요');
+})();
+</script>
